@@ -37,6 +37,7 @@ private:
   // Thresholds for selection
   const unsigned int minJets_;
   const double jetTimeThresh_;
+  const double jetNegTimeThresh_;
   const double jetEcalEtForTimingThresh_;
   const unsigned int jetCellsForTimingThresh_;
   const double minPt_;
@@ -54,6 +55,7 @@ HLTJetTimingFilter<T>::HLTJetTimingFilter(const edm::ParameterSet& iConfig)
           consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("jetEcalEtForTiming"))},
       minJets_{iConfig.getParameter<unsigned int>("minJets")},
       jetTimeThresh_{iConfig.getParameter<double>("jetTimeThresh")},
+      jetNegTimeThresh_{iConfig.getParameter<double>("jetNegTimeThresh")},
       jetEcalEtForTimingThresh_{iConfig.getParameter<double>("jetEcalEtForTimingThresh")},
       jetCellsForTimingThresh_{iConfig.getParameter<unsigned int>("jetCellsForTimingThresh")},
       minPt_{iConfig.getParameter<double>("minJetPt")} {}
@@ -73,9 +75,9 @@ bool HLTJetTimingFilter<T>::hltFilter(edm::Event& iEvent,
   uint njets = 0;
   for (auto iterJet = jets->begin(); iterJet != jets->end(); ++iterJet) {
     edm::Ref<std::vector<T>> const caloJetRef(jets, std::distance(jets->begin(), iterJet));
-    if (iterJet->pt() > minPt_ and jetTimes[caloJetRef] > jetTimeThresh_ and
-        jetEcalEtForTiming[caloJetRef] > jetEcalEtForTimingThresh_ and
-        jetCellsForTiming[caloJetRef] > jetCellsForTimingThresh_) {
+    if (iterJet->pt() > minPt_ and ( (jetTimes[caloJetRef] > jetTimeThresh_) or (jetNegTimeThresh_!=-100.0 and jetTimes[caloJetRef] < jetNegTimeThresh_) ) and 
+	jetEcalEtForTiming[caloJetRef] > jetEcalEtForTimingThresh_ and
+        jetCellsForTiming[caloJetRef] > jetCellsForTimingThresh_ ) {
       // add caloJetRef to the event
       filterproduct.addObject(trigger::TriggerJet, caloJetRef);
       ++njets;
@@ -97,6 +99,7 @@ void HLTJetTimingFilter<T>::fillDescriptions(edm::ConfigurationDescriptions& des
                           edm::InputTag("hltDisplacedHLTCaloJetCollectionProducerMidPtTiming", "jetEcalEtForTiming"));
   desc.add<unsigned int>("minJets", 1);
   desc.add<double>("jetTimeThresh", 1.);
+  desc.add<double>("jetNegTimeThresh", -100.0);
   desc.add<unsigned int>("jetCellsForTimingThresh", 5);
   desc.add<double>("jetEcalEtForTimingThresh", 10.);
   desc.add<double>("minJetPt", 40.);
