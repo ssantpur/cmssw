@@ -46,6 +46,8 @@ private:
   double sMaj_max;
   double seedTimeMin;
   double seedTimeMax;
+  double seedNegTimeMin;
+  double seedNegTimeMax;
   bool useTrackVeto;
 
   edm::InputTag inputTrk;

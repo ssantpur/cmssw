@@ -36,6 +36,8 @@ HLTDisplacedEgammaFilter::HLTDisplacedEgammaFilter(const edm::ParameterSet& iCon
   sMaj_max = iConfig.getParameter<double>("sMaj_max");
   seedTimeMin = iConfig.getParameter<double>("seedTimeMin");
   seedTimeMax = iConfig.getParameter<double>("seedTimeMax");
+  seedNegTimeMin = iConfig.getParameter<double>("seedNegTimeMin");
+  seedNegTimeMax = iConfig.getParameter<double>("seedNegTimeMax");
   useTrackVeto = iConfig.getParameter<bool>("useTrackVeto");
 
   inputToken_ = consumes<trigger::TriggerFilterObjectWithRefs>(inputTag_);
@@ -64,6 +66,8 @@ void HLTDisplacedEgammaFilter::fillDescriptions(edm::ConfigurationDescriptions& 
   desc.add<double>("sMaj_max", 999.0);
   desc.add<double>("seedTimeMin", -25.0);
   desc.add<double>("seedTimeMax", 25.0);
+  desc.add<double>("seedNegTimeMin", -25.0);
+  desc.add<double>("seedNegTimeMax", -100.0);
   desc.add<bool>("useTrackVeto", true);
   desc.add<int>("maxTrackCut", 0);
   desc.add<double>("trackPtCut", 3.0);
@@ -129,7 +133,8 @@ bool HLTDisplacedEgammaFilter::hltFilter(edm::Event& iEvent,
     DetId seedCrystalId = maxRH.first;
     auto seedRH = rechits->find(seedCrystalId);
     float seedTime = (float)seedRH->time();
-    if (seedTime < seedTimeMin || seedTime > seedTimeMax)
+    //    if (seedTime < seedTimeMin || seedTime > seedTimeMax)
+    if (seedTime < seedNegTimeMin || seedTime > seedTimeMax || (seedTime > seedNegTimeMax && seedTime < seedTimeMin) )
       continue;
 
     //Track Veto
