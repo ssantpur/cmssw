@@ -38,6 +38,8 @@ private:
   const unsigned int minJets_;
   const double jetTimeThresh_;
   const double jetNegTimeThresh_;
+  const double jetMaxTimeThresh_;
+  const double jetMaxNegTimeThresh_;
   const double jetEcalEtForTimingThresh_;
   const unsigned int jetCellsForTimingThresh_;
   const double minPt_;
@@ -56,6 +58,8 @@ HLTJetTimingFilter<T>::HLTJetTimingFilter(const edm::ParameterSet& iConfig)
       minJets_{iConfig.getParameter<unsigned int>("minJets")},
       jetTimeThresh_{iConfig.getParameter<double>("jetTimeThresh")},
       jetNegTimeThresh_{iConfig.getParameter<double>("jetNegTimeThresh")},
+      jetMaxTimeThresh_{iConfig.getParameter<double>("jetMaxTimeThresh")},
+      jetMaxNegTimeThresh_{iConfig.getParameter<double>("jetMaxNegTimeThresh")},
       jetEcalEtForTimingThresh_{iConfig.getParameter<double>("jetEcalEtForTimingThresh")},
       jetCellsForTimingThresh_{iConfig.getParameter<unsigned int>("jetCellsForTimingThresh")},
       minPt_{iConfig.getParameter<double>("minJetPt")} {}
@@ -75,7 +79,7 @@ bool HLTJetTimingFilter<T>::hltFilter(edm::Event& iEvent,
   uint njets = 0;
   for (auto iterJet = jets->begin(); iterJet != jets->end(); ++iterJet) {
     edm::Ref<std::vector<T>> const caloJetRef(jets, std::distance(jets->begin(), iterJet));
-    if (iterJet->pt() > minPt_ and ( (jetTimes[caloJetRef] > jetTimeThresh_) or (jetTimes[caloJetRef] < jetNegTimeThresh_ and jetTimes[caloJetRef] > -12.5) ) and 
+    if (iterJet->pt() > minPt_ and ( (jetTimes[caloJetRef] > jetTimeThresh_ && jetTimes[caloJetRef] < jetMaxTimeThresh_) or (jetTimes[caloJetRef] < jetNegTimeThresh_ and jetTimes[caloJetRef] > jetMaxNegTimeThresh_) ) and 
 	jetEcalEtForTiming[caloJetRef] > jetEcalEtForTimingThresh_ and
         jetCellsForTiming[caloJetRef] > jetCellsForTimingThresh_ ) {
       // add caloJetRef to the event
@@ -100,6 +104,8 @@ void HLTJetTimingFilter<T>::fillDescriptions(edm::ConfigurationDescriptions& des
   desc.add<unsigned int>("minJets", 1);
   desc.add<double>("jetTimeThresh", 1.);
   desc.add<double>("jetNegTimeThresh", -100000.0);
+  desc.add<double>("jetMaxTimeThresh", 12.5);
+  desc.add<double>("jetMaxNegTimeThresh", -12.5);
   desc.add<unsigned int>("jetCellsForTimingThresh", 5);
   desc.add<double>("jetEcalEtForTimingThresh", 10.);
   desc.add<double>("minJetPt", 40.);
